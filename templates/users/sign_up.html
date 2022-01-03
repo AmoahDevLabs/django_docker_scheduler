@@ -1,0 +1,45 @@
+{% extends 'users/base.html' %}
+
+{% block content %}
+    <form method="post" action="/">
+        {% csrf_token %}
+        <div class="container">
+            <h1>Sign Up</h1>
+            <hr>
+            {{ form.username }}
+            {{ form.password1 }}
+            {{ form.password2 }}
+            <hr>
+            <div {% if form.errors %}
+                class="invalid-field"
+            {% endif %}>
+                {% if form.username.errors %}
+                    <ul>
+                        {% for error in form.username.errors %}
+                            <li id="error-feedback"><span>{{ error|escape }}</span></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if form.password1.errors %}
+                    <ul>
+                        {% for error in form.password1.errors %}
+                            <li id="error-feedback"><span>{{ error|escape }}</span></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if form.password2.errors %}
+                    <ul>
+                        {% for error in form.password2.errors %}
+                            <li id="error-feedback"><span>{{ error|escape }}</span></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            <button type="submit" class="register-btn">Sign Up</button>
+        </div>
+        <div class="container sign-in">
+            <p>Already have an account? <a href="{% url 'users:sign_in' %}">Sign In</a></p>
+        </div>
+    </form>
+{% endblock %}
+

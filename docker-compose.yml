@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+    db:
+        image: postgres:13.0-alpine
+        volumes:
+            - postgres_data:/var/lib/postgresql/data/
+        environment:
+            - POSTGRES_USER=scheduler_docker
+            - POSTGRES_PASSWORD=scheduler_password
+            - POSTGRES_DB=scheduler_db
+        container_name: scheduler_container_db
+
+    app:
+      build:
+        context: ./
+        dockerfile: Dockerfile
+      restart: always
+      command: python manage.py runserver 0.0.0.0:8000
+      volumes:
+        - ./scheduler/:/usr/src/scheduler/
+      ports:
+        - 8000:8000
+      env_file:
+        - ./.env
+      depends_on:
+        - db
+      container_name: scheduler_container_app
+
+    redis:
+      image: redis:6-alpine
+      ports:
+        - "6379:6379"
+      container_name: scheduler_redis
+
+    celery_worker:
+      restart: always
+      build:
+        context: ./
+      command: celery -A scheduler worker --loglevel=info --logfile=logs/celery.log
+      volumes:
+        - ./scheduler:/usr/src/scheduler
+      env_file:
+        - ./.env
+      depends_on:
+        - db
+        - redis
+        - app
+      container_name: scheduler_celery_worker
+
+    celery-beat:
+      build: ./
+      command: celery -A scheduler beat -l info
+      volumes:
+        - ./scheduler:/usr/src/scheduler
+      env_file:
+        - ./.env
+      depends_on:
+        - db
+        - redis
+        - app
+      container_name: scheduler_celery_beat
+
+    flower:
+      build:
+        context: ./
+      command: celery -A scheduler flower  --broker=redis://host.docker.internal:6379//
+      ports:
+        - 5555:5555
+      env_file:
+        - ./.env
+      depends_on:
+        - db
+        - app
+        - redis
+        - celery_worker
+      container_name: scheduler_flower
+
+volumes:
+    postgres_data:
