@@ -23,5 +23,5 @@ sqlparse==0.4.2
 vine==5.0.0
 wcwidth==0.2.5
 wrapt==1.13.3
-flower==1.0.0
+flower==1.2.0
 psycopg2-binary==2.9.1
